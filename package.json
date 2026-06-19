@@ -1,0 +1,29 @@
+{
+  "name": "st-message-split",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@eslint/css": "^1.3.0",
+    "@stylistic/eslint-plugin": "^5.10.0",
+    "@types/jquery": "^4.0.1",
+    "eslint": "^10.5.0",
+    "typescript": "^5",
+    "typescript-eslint": "^8.61.1"
+  },
+  "author": {
+    "name": "Jeff Sandberg",
+    "url": "https://pdx.su"
+  },
+  "homepage": "https://github.com/paradox460/ST-MessageSplit",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/paradox460/ST-MessageSplit.git"
+  },
+  "license": "MIT",
+  "dependencies": {},
+  "description": "A SillyTavern extension for splitting and merging messages in a chat"
+}
