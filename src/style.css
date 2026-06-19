@@ -1,0 +1,67 @@
+.mes_text.mss-active {
+  position: relative;
+}
+
+.mss-seg+.mss-seg {
+  margin-top: 0.5em;
+}
+
+.mss-rule {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top: 1px dotted var(--SmartThemeBodyColor, currentColor);
+  margin: 0.8em 0;
+  height: 0;
+
+
+  .mss-handle {
+    cursor: grab;
+    padding: 0 0.5em;
+    user-select: none;
+    touch-action: none;
+  }
+
+  .mss-handle:active {
+    cursor: grabbing;
+  }
+
+  /* +/- panel on the LEFT of each divider */
+  .mss-rule-btns {
+    position: absolute;
+    left: 0;
+    display: flex;
+    gap: 0.25em;
+    background: var(--ST-Chat-Background)
+  }
+
+  .mss-add,
+  .mss-remove {
+    cursor: pointer;
+    background: var(--ST-UI-Background);
+    padding: 5px;
+    border: 1px solid var(--ST-UI-Border);
+  }
+
+  .mss-add[hidden],
+  .mss-remove[hidden] {
+    display: none;
+  }
+}
+
+/* confirm/cancel pinned to the bottom of the message body */
+.mss-actions {
+  position: sticky;
+  bottom: 0.25em;
+  z-index: 2;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.25em;
+  padding-top: 0.4em;
+}
+
+.mss-confirm,
+.mss-cancel {
+  cursor: pointer;
+}

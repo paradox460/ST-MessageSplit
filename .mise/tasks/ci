@@ -1,0 +1,5 @@
+#! /usr/bin/env bash
+#MISE description="Test the extension"
+#MISE sources=["src/**/*", "manifest.json"]
+#MISE tools=["bun"]
+bunx tsc --noEmit

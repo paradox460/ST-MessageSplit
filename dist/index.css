@@ -1,0 +1,73 @@
+/* src/style.css */
+.mes_text.mss-active {
+  position: relative;
+}
+
+.mss-seg + .mss-seg {
+  margin-top: .5em;
+}
+
+.mss-rule {
+  position: relative;
+  display: flex;
+  border-top: 1px dotted var(--SmartThemeBodyColor, currentColor);
+  justify-content: center;
+  align-items:  center;
+  height: 0;
+  margin: .8em 0;
+}
+
+.mss-rule .mss-handle {
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  padding: 0 .5em;
+}
+
+.mss-rule .mss-handle:active {
+  cursor: grabbing;
+}
+
+.mss-rule .mss-rule-btns {
+  position: absolute;
+  display: flex;
+  background: var(--ST-Chat-Background);
+  gap: .25em;
+  left: 0;
+}
+
+.mss-rule .mss-add {
+  cursor: pointer;
+  background: var(--ST-UI-Background);
+  border: 1px solid var(--ST-UI-Border);
+  padding: 5px;
+}
+
+.mss-rule .mss-remove {
+  cursor: pointer;
+  background: var(--ST-UI-Background);
+  border: 1px solid var(--ST-UI-Border);
+  padding: 5px;
+}
+
+.mss-rule .mss-add[hidden] {
+  display: none;
+}
+
+.mss-rule .mss-remove[hidden] {
+  display: none;
+}
+
+.mss-actions {
+  position: sticky;
+  z-index: 2;
+  display: flex;
+  justify-content: flex-end;
+  gap: .25em;
+  padding-top: .4em;
+  bottom: .25em;
+}
+
+.mss-confirm, .mss-cancel {
+  cursor: pointer;
+}

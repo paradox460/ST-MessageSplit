@@ -1,0 +1,9 @@
+#! /usr/bin/env bash
+#MISE description="Build the extension"
+#MISE sources=["src/**/*", "manifest.json"]
+#MISE outputs=["dist/index.js", "dist/index.css"]
+#MISE tools=["bun", "jq"]
+#USAGE flag "-m --min" help="Minify the output"
+
+jq -s '.[0].version = .[1].version | .[0]' manifest.json package.json > manifest.tmp && mv manifest.tmp manifest.json
+bun build ./src/index.ts --outdir ./dist --target browser --format esm ${usage_min:+--minify}
