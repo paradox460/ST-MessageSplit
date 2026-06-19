@@ -6,7 +6,8 @@
   "scripts": {
     "lint": "eslint .",
     "build": "bun build ./src/index.ts --outdir ./dist --target browser --format esm",
-    "build:min": "bun build ./src/index.ts --outdir ./dist --target browser --format esm --minify"
+    "build:min": "bun build ./src/index.ts --outdir ./dist --target browser --format esm --minify",
+    "test": "bun test"
   },
   "devDependencies": {
     "@eslint/css": "^1.3.0",
