@@ -4,10 +4,9 @@ A [SillyTavern](https://github.com/SillyTavern/SillyTavern) extension for splitt
 
 ## Features
 
-- **Split** a message into multiple messages along paragraph boundaries, either interactively (drag a divider) or by fuzzy-matching text.
+- **Split** a message into multiple messages along paragraph boundaries, either interactively (drag a divider) or by fuzzy-matching text. During an interactive split, each resulting message can be **re-attributed** to a different group member or to the user persona.
 - **Merge** a message into the previous one, or collapse a contiguous range of messages into a single message.
 - Fenced code blocks (` ``` ` / `~~~`) are treated as atomic — blank lines inside them are never split on.
-- New messages produced by a split are cloned from the original (same author, avatar, system/user flags).
 
 ## Installation
 
@@ -39,6 +38,7 @@ Clicking the scissors button renders the message as separate paragraphs with a d
 
 - **Drag** the grip handle to choose where the split falls.
 - **+** adds another divider one paragraph below; **−** removes a divider.
+- **Authorship dropdown** on each divider re-attributes the message below it — leave as *No Change* to keep the original author, pick the user persona, or pick any group member (in group chats only).
 - **✓** confirms the split; **✗** cancels and restores the original message.
 
 A message must contain at least two paragraphs to be splittable.

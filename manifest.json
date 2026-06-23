@@ -6,7 +6,7 @@
   "js": "dist/index.js",
   "css": "dist/index.css",
   "author": "Jeff Sandberg",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "homePage": "https://github.com/paradox460/ST-MessageSplit",
   "auto_update": true
 }
