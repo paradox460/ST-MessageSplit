@@ -50,6 +50,17 @@
   padding: 5px;
 }
 
+.mss-rule .mss-member-select {
+  background: var(--ST-UI-Background);
+  color: var(--SmartThemeBodyColor, currentColor);
+  border: 1px solid var(--ST-UI-Border);
+  position: absolute;
+  max-width: 10em;
+  padding: 2px 4px;
+  font-size: .85em;
+  right: 0;
+}
+
 .mss-rule .mss-add[hidden] {
   display: none;
 }

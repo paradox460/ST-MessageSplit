@@ -38,8 +38,23 @@ function segmentParagraphs(raw) {
   return segments;
 }
 
+// src/util.ts
+async function importFromUrl(url, what, defaultValue = null) {
+  try {
+    const module = await import(url);
+    if (!Object.hasOwn(module, what)) {
+      throw new Error(`No ${what} in module`);
+    }
+    return module[what];
+  } catch (error) {
+    console.error(`Failed to import ${what} from ${url}: ${error}`);
+    return defaultValue;
+  }
+}
+var default_avatar = await importFromUrl("/script.js", "default_avatar");
+
 // src/mutations.ts
-async function applyParagraphSplit(ctx, messageId, msg, segments, bounds) {
+async function applyParagraphSplit(ctx, messageId, msg, segments, bounds, charOverrides) {
   const sorted = [...bounds].sort((a, b) => a - b);
   const edges = [0, ...sorted, segments.length];
   const regions = [];
@@ -63,6 +78,20 @@ async function applyParagraphSplit(ctx, messageId, msg, segments, bounds) {
     delete m.swipe_info;
     if (m.extra)
       delete m.extra.token_count;
+    const override = charOverrides?.[i - 1];
+    if (override === "__user__") {
+      m.is_user = true;
+      m.name = ctx.name1 || "You";
+      delete m.force_avatar;
+      delete m.original_avatar;
+    } else if (override && ctx.characters) {
+      const ch = ctx.characters.find((c) => c.avatar === override);
+      if (ch) {
+        m.name = ch.name;
+        m.is_user = false;
+        m.force_avatar = ch.avatar != "none" ? ctx.getThumbnailUrl("avatar", ch.avatar) : default_avatar;
+      }
+    }
     newMsgs.push(m);
   }
   ctx.chat.splice(messageId + 1, 0, ...newMsgs);
@@ -122,6 +151,7 @@ class SplitSession {
   messageId;
   msg;
   segments;
+  members;
   mesText;
   originalHtml = "";
   rules = [];
@@ -144,12 +174,13 @@ class SplitSession {
     document.removeEventListener("pointermove", this.onPointerMove);
     document.removeEventListener("pointerup", this.onPointerUp);
   };
-  constructor(ctx, mesEl, messageId, msg, segments) {
+  constructor(ctx, mesEl, messageId, msg, segments, members) {
     this.ctx = ctx;
     this.mesEl = mesEl;
     this.messageId = messageId;
     this.msg = msg;
     this.segments = segments;
+    this.members = members;
   }
   get targetId() {
     return this.messageId;
@@ -188,11 +219,30 @@ class SplitSession {
   createRule(boundary) {
     const el = document.createElement("div");
     el.className = "mss-rule";
-    el.innerHTML = '<div class="mss-rule-btns">' + '<div class="mss-add fa-solid fa-plus interactable" title="Add divider below"></div>' + '<div class="mss-remove fa-solid fa-minus interactable" title="Remove divider"></div>' + "</div>" + '<div class="mss-handle fa-solid fa-grip-lines" title="Drag to choose split point"></div>';
+    const userLabel = this.ctx.name1 || "You";
+    let memberOpts = "";
+    if (this.members) {
+      memberOpts = this.members.map((c) => `<option value="${c.avatar}">${c.name}</option>`).join("");
+    }
+    el.innerHTML = `
+<div class="mss-rule-btns">
+  <div class="mss-add fa-solid fa-plus interactable" title="Add divider below"></div>
+  <div class="mss-remove fa-solid fa-minus interactable" title="Remove divider"></div>
+</div>
+<div class="mss-handle fa-solid fa-grip-lines" title="Drag to choose split point"></div>
+<select class="mss-member-select">
+  <optgroup label="Split as...">
+    <option value="" selected>No Change</option>
+    <option value="__user__">${userLabel}</option>
+  </optgroup>
+  ${memberOpts ? `<optgroup label="Group members">${memberOpts}</optgroup>` : ""}
+</select>
+`;
     const handle = el.querySelector(".mss-handle");
     const addBtn = el.querySelector(".mss-add");
     const removeBtn = el.querySelector(".mss-remove");
-    const ref = { el, handle, addBtn, removeBtn, boundary };
+    const selectEl = el.querySelector(".mss-member-select");
+    const ref = { el, handle, addBtn, removeBtn, selectEl, boundary };
     handle.addEventListener("pointerdown", (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -208,6 +258,9 @@ class SplitSession {
     removeBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       this.removeRule(ref);
+    });
+    selectEl.addEventListener("click", (e) => {
+      e.stopPropagation();
     });
     return ref;
   }
@@ -267,9 +320,15 @@ class SplitSession {
     this.refreshControls();
   }
   async confirm() {
-    const bounds = this.rules.map((r) => r.boundary);
+    const pairs = this.rules.map((r) => ({
+      boundary: r.boundary,
+      override: r.selectEl.value || null
+    }));
+    pairs.sort((a, b) => a.boundary - b.boundary);
+    const bounds = pairs.map((p) => p.boundary);
+    const charOverrides = pairs.map((p) => p.override);
     activeSession = null;
-    await applyParagraphSplit(this.ctx, this.messageId, this.msg, this.segments, bounds);
+    await applyParagraphSplit(this.ctx, this.messageId, this.msg, this.segments, bounds, charOverrides);
   }
   cancel() {
     document.removeEventListener("pointermove", this.onPointerMove);
@@ -283,7 +342,17 @@ class SplitSession {
   }
 }
 function openSplitSession(ctx, mesEl, messageId, msg, segments) {
-  activeSession = new SplitSession(ctx, mesEl, messageId, msg, segments);
+  let members = null;
+  if (ctx.groupId && ctx.groups && ctx.characters) {
+    const group = ctx.groups.find((g) => g.id === ctx.groupId);
+    if (group) {
+      const chars = ctx.characters;
+      members = group.members.map((avatar) => chars.find((c) => c.avatar === avatar)).filter((c) => Boolean(c));
+      if (members?.length === 0)
+        members = null;
+    }
+  }
+  activeSession = new SplitSession(ctx, mesEl, messageId, msg, segments, members);
   activeSession.start();
 }
 
