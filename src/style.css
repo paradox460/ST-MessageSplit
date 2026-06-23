@@ -43,6 +43,16 @@
     padding: 5px;
     border: 1px solid var(--ST-UI-Border);
   }
+  .mss-member-select {
+    font-size: 0.85em;
+    max-width: 10em;
+    background: var(--ST-UI-Background);
+    color: var(--SmartThemeBodyColor, currentColor);
+    border: 1px solid var(--ST-UI-Border);
+    padding: 2px 4px;
+    position: absolute;
+    right: 0;
+  }
 
   .mss-add[hidden],
   .mss-remove[hidden] {

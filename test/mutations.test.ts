@@ -3,6 +3,9 @@ import { applyParagraphSplit, mergeRange, parseIdRange } from '../src/mutations'
 import { msg } from './helpers';
 
 function fakeCtx(
+  chat: ChatMessage[],
+  characters?: Character[],
+  name1?: string,
 ): {
   ctx: STContext;
   counts: { print: number; save: number };
@@ -15,6 +18,11 @@ function fakeCtx(
     },
     async saveChat(): Promise<void> {
       counts.save++;
+    },
+    characters,
+    name1,
+    getThumbnailUrl(_type: string, file: string): string {
+      return `/thumbnails/${file}`;
     },
   } as unknown as STContext;
   return { ctx, counts };
@@ -153,5 +161,52 @@ describe('applyParagraphSplit', () => {
     expect(chat).toHaveLength(4);
     expect(chat[2].mes).toBe('p0');
     expect(chat[3].mes).toBe('p1');
+  });
+  test('reattributes to group character', async () => {
+    const characters = [{ name: 'Alice', avatar: 'alice.png' }];
+    const m = msg('orig');
+    const chat = [m];
+    const { ctx } = fakeCtx(chat, characters);
+    await applyParagraphSplit(ctx, 0, m, ['p0', 'p1'], [1], ['alice.png']);
+    expect(chat[1].name).toBe('Alice');
+    expect(chat[1].is_user).toBe(false);
+    expect(chat[1].force_avatar).toBe('/thumbnails/alice.png');
+  });
+
+  test('reattributes to user persona', async () => {
+    const m = msg('orig');
+    const chat = [m];
+    const { ctx } = fakeCtx(chat, undefined, 'Jeff');
+    await applyParagraphSplit(ctx, 0, m, ['p0', 'p1'], [1], ['__user__']);
+    expect(chat[1].name).toBe('Jeff');
+    expect(chat[1].is_user).toBe(true);
+    expect(chat[1].force_avatar).toBeUndefined();
+  });
+
+  test('null override preserves original', async () => {
+    const m = msg('orig');
+    const chat = [m];
+    const { ctx } = fakeCtx(chat);
+    await applyParagraphSplit(ctx, 0, m, ['p0', 'p1'], [1], [null]);
+    expect(chat[1].name).toBe(m.name);
+  });
+
+  test('undefined charOverrides preserves original', async () => {
+    const m = msg('orig');
+    const chat = [m];
+    const { ctx } = fakeCtx(chat);
+    await applyParagraphSplit(ctx, 0, m, ['p0', 'p1'], [1]);
+    expect(chat[1].name).toBe(m.name);
+  });
+
+  test('multiple overrides with mixed values', async () => {
+    const characters = [{ name: 'Alice', avatar: 'alice.png' }];
+    const m = msg('orig');
+    const chat = [m];
+    const { ctx } = fakeCtx(chat, characters, 'Jeff');
+    await applyParagraphSplit(ctx, 0, m, ['p0', 'p1', 'p2'], [1, 2], ['__user__', null]);
+    expect(chat[1].name).toBe('Jeff');
+    expect(chat[1].is_user).toBe(true);
+    expect(chat[2].name).toBe(m.name);
   });
 });

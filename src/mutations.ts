@@ -1,3 +1,5 @@
+import { default_avatar } from "./util.js";
+
 /**
  * Chat-mutation primitives shared by the toolbar buttons and the slash commands.
  * Each mutates `ctx.chat` in place, then re-renders and persists.
@@ -9,6 +11,7 @@ export async function applyParagraphSplit(
   msg: ChatMessage,
   segments: string[],
   bounds: number[],
+  charOverrides?: (string | null)[],
 ): Promise<void> {
   const sorted = [...bounds].sort((a, b) => a - b);
   // region edges: 0, b1, b2, ..., bK, N  → K+1 regions
@@ -34,6 +37,21 @@ export async function applyParagraphSplit(
     delete m.swipe_id;
     delete m.swipe_info;
     if (m.extra) delete m.extra.token_count;
+    // reattribution
+    const override = charOverrides?.[i - 1];
+    if (override === '__user__') {
+      m.is_user = true;
+      m.name = ctx.name1 || 'You';
+      delete m.force_avatar;
+      delete m.original_avatar;
+    } else if (override && ctx.characters) {
+      const ch = ctx.characters.find((c : Character) => c.avatar === override);
+      if (ch) {
+        m.name = ch.name;
+        m.is_user = false;
+        m.force_avatar = ch.avatar != "none" ? ctx.getThumbnailUrl("avatar", ch.avatar) : default_avatar;
+      }
+    }
     newMsgs.push(m);
   }
   ctx.chat.splice(messageId + 1, 0, ...newMsgs);
