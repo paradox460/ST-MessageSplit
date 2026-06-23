@@ -53,7 +53,7 @@ export class SplitSession {
     private readonly ctx: STContext,
     private readonly mesEl: HTMLElement,
     private readonly messageId: number,
-    private readonly msg: STChatMessage,
+    private readonly msg: ChatMessage,
     private readonly segments: string[],
   ) {}
 
@@ -213,7 +213,7 @@ export function openSplitSession(
   ctx: STContext,
   mesEl: HTMLElement,
   messageId: number,
-  msg: STChatMessage,
+  msg: ChatMessage,
   segments: string[],
 ): void {
   activeSession = new SplitSession(ctx, mesEl, messageId, msg, segments);

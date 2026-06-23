@@ -6,7 +6,7 @@
 export async function applyParagraphSplit(
   ctx: STContext,
   messageId: number,
-  msg: STChatMessage,
+  msg: ChatMessage,
   segments: string[],
   bounds: number[],
 ): Promise<void> {
@@ -25,10 +25,10 @@ export async function applyParagraphSplit(
   delete msg.swipe_info;
   if (msg.extra) delete msg.extra.token_count;
 
-  // remaining regions → new messages cloned from the original (same author)
-  const newMsgs: STChatMessage[] = [];
+  // remaining regions → new messages cloned from the original
+  const newMsgs: ChatMessage[] = [];
   for (let i = 1; i < regions.length; i++) {
-    const m = structuredClone(msg) as STChatMessage;
+    const m = structuredClone(msg) as ChatMessage;
     m.mes = regions[i];
     delete m.swipes;
     delete m.swipe_id;

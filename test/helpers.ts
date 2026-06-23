@@ -3,7 +3,7 @@
 // fresh on each call, so install in `beforeEach` and remove in `afterEach`.
 
 export interface FakeState {
-  chat: STChatMessage[];
+  chat: ChatMessage[];
   printCalls: number;
   saveCalls: number;
 }
@@ -17,13 +17,13 @@ export interface STMocks {
 
 interface MutableGlobals {
   SillyTavern?: {
-    getContext(): { chat: STChatMessage[]; printMessages(): Promise<void>; saveChat(): Promise<void> };
+    getContext(): { chat: ChatMessage[]; printMessages(): Promise<void>; saveChat(): Promise<void> };
     libs: { Fuse: STFuseConstructor };
   };
   toastr?: { info(msg: string): void; warning(msg: string): void };
 }
 
-export function installSTGlobals(chat: STChatMessage[]): STMocks {
+export function installSTGlobals(chat: ChatMessage[]): STMocks {
   const state: FakeState = { chat, printCalls: 0, saveCalls: 0 };
   let fuseResults: STFuseResult[] = [];
   const warnings: string[] = [];
@@ -76,6 +76,6 @@ export function clearSTGlobals(): void {
 }
 
 // Build a chat message with sensible defaults; override per test.
-export function msg(mes: string, extra: Partial<STChatMessage> = {}): STChatMessage {
+export function msg(mes: string, extra: Partial<ChatMessage> = {}): ChatMessage {
   return { name: 'Bot', is_user: false, is_system: false, mes, ...extra };
 }

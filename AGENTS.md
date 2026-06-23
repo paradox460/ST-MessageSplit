@@ -41,7 +41,7 @@ Keep concerns separated; do not collapse everything back into `index.ts`.
 ## SillyTavern integration conventions
 
 - Types for the ST runtime live in `src/sillytavern.d.ts` via `declare global`
-  (`STContext`, `STChatMessage`, the slash-command classes, `SillyTavern.libs.Fuse`,
+  (`STContext`, `ChatMessage`, the slash-command classes, `SillyTavern.libs.Fuse`,
   `toastr`, `$`). Extend these interfaces rather than casting to `any`. The style is
   deliberately pragmatic — `unknown` for opaque returns is fine.
 - Get runtime handles from `SillyTavern.getContext()`; classes like

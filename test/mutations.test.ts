@@ -2,7 +2,8 @@ import { describe, test, expect } from 'bun:test';
 import { applyParagraphSplit, mergeRange, parseIdRange } from '../src/mutations';
 import { msg } from './helpers';
 
-function fakeCtx(chat: STChatMessage[]): {
+function fakeCtx(
+): {
   ctx: STContext;
   counts: { print: number; save: number };
 } {
@@ -84,7 +85,7 @@ describe('mergeRange', () => {
   });
 
   test('skips non-string middle message from text but still removes it', async () => {
-    const chat = [msg('A'), { mes: undefined }, msg('C')] as STChatMessage[];
+    const chat = [msg('A'), { mes: undefined }, msg('C')] as ChatMessage[];
     const { ctx } = fakeCtx(chat);
     await mergeRange(ctx, 0, 2);
     expect(chat).toHaveLength(1);
@@ -92,7 +93,7 @@ describe('mergeRange', () => {
   });
 
   test('no-op when target is not a string', async () => {
-    const chat = [{ mes: undefined }, msg('B')] as STChatMessage[];
+    const chat = [{ mes: undefined }, msg('B')] as ChatMessage[];
     const { ctx, counts } = fakeCtx(chat);
     await mergeRange(ctx, 0, 1);
     expect(chat).toHaveLength(2);
