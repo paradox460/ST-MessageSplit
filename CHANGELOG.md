@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- **Slash commands renamed** to avoid conflicts with SillyTavern's built-in
+  commands: `/merge` is now `/msg-merge` and `/split` is now `/msg-split`.
+
+### Added
+
+- **Author attribution on `/msg-split`**: an optional `author=<name>` named
+  argument re-attributes the message below the split to a group member or the
+  user persona (fuzzy-matched via `Fuse`). Omit it to keep the original author.
+  The argument's autocomplete dropdown is populated with the current group
+  members plus the user persona.
+
 ## 0.2.1 - 2026-06-26
 
 No real changes this release, just actually compile before shipping
