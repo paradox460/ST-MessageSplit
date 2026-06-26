@@ -1,6 +1,8 @@
 import { segmentParagraphs } from './segment';
 import { applyParagraphSplit, mergeRange, parseIdRange } from './mutations';
 import { getActiveSession } from './session';
+import { commonEnumProviders, enumIcons, SlashCommandEnumValue } from './util';
+
 
 export async function onMergeCommand(_named: Record<string, string>, unnamed: string | string[]): Promise<string> {
   const ctx = SillyTavern.getContext();
@@ -47,6 +49,7 @@ export async function onSplitCommand(named: Record<string, string>, unnamed: str
   const ctx = SillyTavern.getContext();
   const query = (Array.isArray(unnamed) ? unnamed.join(' ') : String(unnamed ?? '')).trim();
   const msgArg = (named.msg ?? '').toString().trim();
+  const authorArg = (named.author ?? '').toString().trim();
 
   let messageId: number;
   if (msgArg) {
@@ -79,8 +82,9 @@ export async function onSplitCommand(named: Record<string, string>, unnamed: str
   }
 
   const { Fuse } = SillyTavern.libs;
-  const fuse = new Fuse(segments, { includeScore: true });
-  const results = fuse.search(query);
+
+  const paragraphFuse = new Fuse(segments);
+  const results = paragraphFuse.search(query);
   if (results.length === 0) {
     toastr.warning(`No paragraph matches "${query}".`);
     return '';
@@ -92,9 +96,26 @@ export async function onSplitCommand(named: Record<string, string>, unnamed: str
     return '';
   }
 
+  let author: string | null = null;
+
+  if (authorArg) {
+    // We add a psuedo character to the list to represent the user
+    const searchableChars = ctx.characters.concat([{ name: ctx.name1, avatar: "__user__" }]);
+    const authorFuse = new Fuse(searchableChars, {
+      keys: ['name'],
+    })
+    const authorResults = authorFuse.search(authorArg);
+    if (authorResults.length <= 0) {
+      toastr.warning(`No character matches "${authorArg}", aborting.`)
+      return ''
+    }
+
+    author = authorResults[0].item.avatar;
+  }
+
   getActiveSession()?.cancel();
 
-  await applyParagraphSplit(ctx, messageId, msg, segments, [boundary]);
+  await applyParagraphSplit(ctx, messageId, msg, segments, [boundary], [author]);
   return '';
 }
 
@@ -127,6 +148,13 @@ export function registerCommands(): void {
         typeList: [ARGUMENT_TYPE.NUMBER],
         isRequired: false,
       }),
+      SlashCommandNamedArgument.fromProps({
+        name: 'author',
+        description: 'Author to change new message to.',
+        typeList: [ARGUMENT_TYPE.STRING],
+        isRequired: false,
+        enumProvider: groupMembersWithPersona(ctx)
+      }),
     ],
     unnamedArgumentList: [
       SlashCommandArgument.fromProps({
@@ -137,4 +165,11 @@ export function registerCommands(): void {
     ],
     helpString: '<div>Split a message before the paragraph best matching the text. <code>/split msg=3 the second part</code>; omit <code>msg</code> to split the most recent message.</div>',
   }));
+}
+
+function groupMembersWithPersona(ctx: STContext) {
+  const groupMembers = [{ description: ctx.name1 }].concat(commonEnumProviders.groupMembers()()).map(({ description }) => (
+    new SlashCommandEnumValue(description, null, 'enum', enumIcons.character)
+  ));
+  return () => groupMembers;
 }

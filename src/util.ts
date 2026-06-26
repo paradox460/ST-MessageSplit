@@ -13,3 +13,9 @@ export async function importFromUrl( url: string) {
 }
 
 export const { default_avatar } = await importFromUrl('/script.js') as { default_avatar: string };
+
+export const { commonEnumProviders, enumIcons } = await importFromUrl(
+  '/scripts/slash-commands/SlashCommandCommonEnumsProvider.js')
+
+export const { SlashCommandEnumValue } = await importFromUrl(
+  '/scripts/slash-commands/SlashCommandEnumValue.js')
