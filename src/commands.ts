@@ -124,7 +124,7 @@ export function registerCommands(): void {
   const { SlashCommandParser, SlashCommand, SlashCommandArgument, SlashCommandNamedArgument, ARGUMENT_TYPE } = ctx;
 
   SlashCommandParser.addCommandObject(SlashCommand.fromProps({
-    name: 'merge',
+    name: 'msg-merge',
     callback: onMergeCommand,
     returns: 'nothing',
     unnamedArgumentList: [
@@ -138,7 +138,7 @@ export function registerCommands(): void {
   }));
 
   SlashCommandParser.addCommandObject(SlashCommand.fromProps({
-    name: 'split',
+    name: 'msg-split',
     callback: onSplitCommand,
     returns: 'nothing',
     namedArgumentList: [
