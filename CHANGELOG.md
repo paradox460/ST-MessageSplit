@@ -5,11 +5,13 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.1] - 2026-06-26
+## Unreleased
+
+## 0.2.1 - 2026-06-26
 
 No real changes this release, just actually compile before shipping
 
-## [0.2.0] - 2026-06-23
+## 0.2.0 - 2026-06-23
 
 ### Added
 
@@ -44,7 +46,7 @@ No real changes this release, just actually compile before shipping
   user-persona reattribution, `null` override passthrough, `undefined` overrides, and
   mixed multi-override splits.
 
-## [0.1.0] - 2026-06-20
+## 0.1.0 - 2026-06-20
 
 Initial release.
 
@@ -62,6 +64,3 @@ Initial release.
   recent message into its ancestor.
 - Fence-aware paragraph segmentation: fenced code blocks (` ``` ` / `~~~`) are atomic
   and never split on their internal blank lines.
-
-[0.1.0]: https://github.com/paradox460/ST-MessageSplit/releases/tag/v0.1.0
-[0.2.0]: https://github.com/paradox460/ST-MessageSplit/releases/tag/v0.2.0

@@ -1,0 +1,42 @@
+#! /usr/bin/env fish
+#MISE description="Bump version number"
+#MISE tools=["jq"]
+#USAGE flag "--number <version>" help="The explicit version number to release"
+#USAGE flag "--major" help="Bump the major version number"
+#USAGE flag "--minor" help="Bump the minor version number"
+#USAGE flag "--patch" help="Bump the patch version number"
+#USAGE flag "--suffix <suffix>" help="The suffix to append to the version number"
+
+set -l isEmpty (jj log -r @ --no-graph -T 'if(empty, "Empty\n", "Not empty\n")')
+
+if test "Empty" != $isEmpty
+  jj new
+end
+
+string match --regex -g -q -- '(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)(?:-(?<suffix>.*))?' (jq -r .version package.json)
+
+if set -q usage_major
+  set  major (math $major + 1)
+  set  minor 0
+  set  patch 0
+  set  suffix ""
+end
+
+if set -q usage_minor
+  set  minor (math $minor + 1)
+  set  patch 0
+  set  suffix ""
+end
+
+if set -q usage_patch
+  set  patch (math $patch + 1)
+  set  suffix ""
+end
+
+if set -q usage_suffix
+  set  suffix "-$usage_suffix"
+end
+
+set -l version_string "$major.$minor.$patch$suffix"
+
+jq -s ".[0].version = \"$version_string\" | .[0]" package.json | sponge package.json

@@ -1,0 +1,48 @@
+#!/usr/bin/env bun
+//MISE description="Tag and release this version"
+
+import { $ } from 'bun';
+
+const pkg = JSON.parse(await Bun.file('package.json').text());
+const version = pkg.version;
+
+// Create release commit
+try {
+  const result = await $`jj log -r @ --no-graph -T 'if(empty, "Empty\n", "Not empty\n")'`.text()
+  const diff = await $`jj diff --name-only`.text()
+  console.log(result);
+  console.log(diff)
+  if (result.trim() === 'Empty' || diff.trim().match(/^.*?package\.json$/i)) {
+
+    await $`jj describe --message ${'Release v' + version}`;
+  } else {
+    $`jj new --message ${'Release v' + version}`;
+  }
+} catch (e) {
+  console.error(e)
+  exit(1);
+}
+
+// Build
+await $`mise run build`;
+
+// Stamp the changelog
+const today = new Date().toISOString().slice(0, 10);
+let changelog = await Bun.file('CHANGELOG.md').text();
+changelog = changelog.replace(/^## Unreleased$/im, `## Unreleased\n\n## ${version} - ${today}`);
+await Bun.write('CHANGELOG.md', changelog);
+
+ // Land and push
+ await $`jj bookmark set master -r @`;
+ await $`jj git push --bookmark master`;
+
+// Extract body: from below the version header to before the next ## entry
+const headerLine = `## ${version} - ${today}`;
+const afterHeader = changelog.slice(changelog.indexOf(headerLine) + headerLine.length);
+const nextEntry = afterHeader.search(/^## /m);
+const tagBody = new Response((nextEntry === -1 ? afterHeader : afterHeader.slice(0, nextEntry)).trim());
+
+// Annotated, signed tag — message from stdin
+await $`git tag -a -s -f -F - ${'v' + version} < ${tagBody}`
+await $`git push --tags`;
+await $`gh release create ${'v' + version} --notes-from-tag`;
