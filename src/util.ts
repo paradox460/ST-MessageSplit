@@ -1,22 +1,15 @@
 /**
- * Import a member from a module by URL, bypassing webpack.
- * @param {string} url URL to import from
- * @param {string} what Name of the member to import
- * @param {any} defaultValue Fallback value
- * @returns {Promise<any>} Imported member
+ * Import members from a module by URL, bypassing webpack.
+ * @param url URL to import from
+ * @returns Promise of an object
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function importFromUrl(url: string, what: string, defaultValue: any = null): Promise<any> {
+export async function importFromUrl( url: string) {
   try {
     const module = await import(/* webpackIgnore: true */ url);
-    if (!Object.hasOwn(module, what)) {
-      throw new Error(`No ${what} in module`);
-    }
-    return module[what];
+    return module;
   } catch (error) {
-    console.error(`Failed to import ${what} from ${url}: ${error}`);
-    return defaultValue;
+    console.error(`Failed to import ${url}: ${error}`);
   }
 }
 
-export const default_avatar = await importFromUrl("/script.js", "default_avatar") as string;
+export const { default_avatar } = await importFromUrl('/script.js') as { default_avatar: string };
