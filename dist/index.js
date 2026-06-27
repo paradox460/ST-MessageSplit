@@ -39,19 +39,17 @@ function segmentParagraphs(raw) {
 }
 
 // src/util.ts
-async function importFromUrl(url, what, defaultValue = null) {
+async function importFromUrl(url) {
   try {
     const module = await import(url);
-    if (!Object.hasOwn(module, what)) {
-      throw new Error(`No ${what} in module`);
-    }
-    return module[what];
+    return module;
   } catch (error) {
-    console.error(`Failed to import ${what} from ${url}: ${error}`);
-    return defaultValue;
+    console.error(`Failed to import ${url}: ${error}`);
   }
 }
-var default_avatar = await importFromUrl("/script.js", "default_avatar");
+var { default_avatar } = await importFromUrl("/script.js");
+var { commonEnumProviders, enumIcons } = await importFromUrl("/scripts/slash-commands/SlashCommandCommonEnumsProvider.js");
+var { SlashCommandEnumValue } = await importFromUrl("/scripts/slash-commands/SlashCommandEnumValue.js");
 
 // src/mutations.ts
 async function applyParagraphSplit(ctx, messageId, msg, segments, bounds, charOverrides) {
@@ -445,6 +443,7 @@ async function onSplitCommand(named, unnamed) {
   const ctx = SillyTavern.getContext();
   const query = (Array.isArray(unnamed) ? unnamed.join(" ") : String(unnamed ?? "")).trim();
   const msgArg = (named.msg ?? "").toString().trim();
+  const authorArg = (named.author ?? "").toString().trim();
   let messageId;
   if (msgArg) {
     messageId = Number(msgArg);
@@ -472,8 +471,8 @@ async function onSplitCommand(named, unnamed) {
     return "";
   }
   const { Fuse } = SillyTavern.libs;
-  const fuse = new Fuse(segments, { includeScore: true });
-  const results = fuse.search(query);
+  const paragraphFuse = new Fuse(segments);
+  const results = paragraphFuse.search(query);
   if (results.length === 0) {
     toastr.warning(`No paragraph matches "${query}".`);
     return "";
@@ -483,15 +482,28 @@ async function onSplitCommand(named, unnamed) {
     toastr.warning("Best-matching paragraph is the first; nothing to split before.");
     return "";
   }
+  let author = null;
+  if (authorArg) {
+    const searchableChars = ctx.characters.concat([{ name: ctx.name1, avatar: "__user__" }]);
+    const authorFuse = new Fuse(searchableChars, {
+      keys: ["name"]
+    });
+    const authorResults = authorFuse.search(authorArg);
+    if (authorResults.length <= 0) {
+      toastr.warning(`No character matches "${authorArg}", aborting.`);
+      return "";
+    }
+    author = authorResults[0].item.avatar;
+  }
   getActiveSession()?.cancel();
-  await applyParagraphSplit(ctx, messageId, msg, segments, [boundary]);
+  await applyParagraphSplit(ctx, messageId, msg, segments, [boundary], [author]);
   return "";
 }
 function registerCommands() {
   const ctx = SillyTavern.getContext();
   const { SlashCommandParser, SlashCommand, SlashCommandArgument, SlashCommandNamedArgument, ARGUMENT_TYPE } = ctx;
   SlashCommandParser.addCommandObject(SlashCommand.fromProps({
-    name: "merge",
+    name: "msg-merge",
     callback: onMergeCommand,
     returns: "nothing",
     unnamedArgumentList: [
@@ -504,7 +516,7 @@ function registerCommands() {
     helpString: "<div>Merge messages. <code>/merge</code> merges the last message into its ancestor; <code>/merge 5</code> merges message 5 into 4; <code>/merge 2-5</code> collapses messages 2 through 5 into message 2.</div>"
   }));
   SlashCommandParser.addCommandObject(SlashCommand.fromProps({
-    name: "split",
+    name: "msg-split",
     callback: onSplitCommand,
     returns: "nothing",
     namedArgumentList: [
@@ -513,6 +525,13 @@ function registerCommands() {
         description: "message id to split; defaults to the previous (most recent) message",
         typeList: [ARGUMENT_TYPE.NUMBER],
         isRequired: false
+      }),
+      SlashCommandNamedArgument.fromProps({
+        name: "author",
+        description: "Author to change new message to.",
+        typeList: [ARGUMENT_TYPE.STRING],
+        isRequired: false,
+        enumProvider: groupMembersWithPersona(ctx)
       })
     ],
     unnamedArgumentList: [
@@ -524,6 +543,10 @@ function registerCommands() {
     ],
     helpString: "<div>Split a message before the paragraph best matching the text. <code>/split msg=3 the second part</code>; omit <code>msg</code> to split the most recent message.</div>"
   }));
+}
+function groupMembersWithPersona(ctx) {
+  const groupMembers = [{ description: ctx.name1 }].concat(commonEnumProviders.groupMembers()()).map(({ description }) => new SlashCommandEnumValue(description, null, "enum", enumIcons.character));
+  return () => groupMembers;
 }
 
 // src/index.ts
